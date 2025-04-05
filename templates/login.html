@@ -512,150 +512,151 @@
     </div>
 
     <script>
-      
+      // Select DOM elements
+      const toggleToSignup = document.getElementById("toggle-to-signup");
+      const toggleToLogin = document.getElementById("toggle-to-login");
+      const loginForm = document.getElementById("login-form"); // ID of the login form container
+      const signupForm = document.getElementById("signup-form"); // ID of the signup form container
 
-// Select DOM elements
-const toggleToSignup = document.getElementById("toggle-to-signup");
-const toggleToLogin = document.getElementById("toggle-to-login");
-const loginForm = document.getElementById("login-form"); // ID of the login form container
-const signupForm = document.getElementById("signup-form"); // ID of the signup form container
-
-// Function to toggle to the signup form
-toggleToSignup.addEventListener("click", () => {
-  loginForm.classList.add("hidden"); // Hide the login form
-  signupForm.classList.remove("hidden"); // Show the signup form
-});
-
-// Function to toggle back to the login form
-toggleToLogin.addEventListener("click", () => {
-  signupForm.classList.add("hidden"); // Hide the signup form
-  loginForm.classList.remove("hidden"); // Show the login form
-});
-
-document
-  .getElementById("login-form-element")
-  .addEventListener("submit", async function (event) {
-    event.preventDefault();
-    console.log("Submitting login form...");
-
-    const email = document.getElementById("login-email").value;
-
-    // Validate email format
-    if (!validateEmail(email)) {
-      alert("Please enter a valid email address.");
-      return;
-    }
-
-    const formData = new FormData(event.target);
-    try {
-      const response = await fetch("/login", {
-        method: "POST",
-        body: formData,
+      // Function to toggle to the signup form
+      toggleToSignup.addEventListener("click", () => {
+        loginForm.classList.add("hidden"); // Hide the login form
+        signupForm.classList.remove("hidden"); // Show the signup form
       });
 
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
+      // Function to toggle back to the login form
+      toggleToLogin.addEventListener("click", () => {
+        signupForm.classList.add("hidden"); // Hide the signup form
+        loginForm.classList.remove("hidden"); // Show the login form
+      });
+
+      document
+        .getElementById("login-form-element")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault();
+          console.log("Submitting login form...");
+
+          const email = document.getElementById("login-email").value;
+
+          // Validate email format
+          if (!validateEmail(email)) {
+            alert("Please enter a valid email address.");
+            return;
+          }
+
+          const formData = new FormData(event.target);
+          try {
+            const response = await fetch("/login", {
+              method: "POST",
+              body: formData,
+            });
+
+            if (!response.ok) {
+              throw new Error("Network response was not ok");
+            }
+
+            const result = await response.json();
+            console.log("Result:", result);
+
+            if (result.success) {
+              window.location.href = result.redirect_url;
+            } else {
+              alert(result.message);
+            }
+          } catch (error) {
+            console.error("Error during form submission:", error);
+            alert("An error occurred. Please try again.");
+          }
+        });
+
+      function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
       }
 
-      const result = await response.json();
-      console.log("Result:", result);
+      // Password validation function
+      function validatePassword(password) {
+        const errors = [];
 
-      if (result.success) {
-        window.location.href = result.redirect_url;
-      } else {
-        alert(result.message);
+        if (password.length < 8) {
+          errors.push("Password must be at least 8 characters long.");
+        }
+        if (!/[A-Z]/.test(password)) {
+          errors.push("Password must contain at least one uppercase letter.");
+        }
+        if (!/[a-z]/.test(password)) {
+          errors.push("Password must contain at least one lowercase letter.");
+        }
+        if (!/[0-9]/.test(password)) {
+          errors.push("Password must contain at least one number.");
+        }
+        if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
+          errors.push("Password must contain at least one special character.");
+        }
+        if (/\s/.test(password)) {
+          errors.push("Password must not contain spaces.");
+        }
+
+        return errors;
       }
-    } catch (error) {
-      console.error("Error during form submission:", error);
-      alert("An error occurred. Please try again.");
-    }
-  });
 
-function validateEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
+      // Signup form submission
+      document
+        .getElementById("signup-form-element")
+        .addEventListener("submit", async function (event) {
+          event.preventDefault(); // Prevent default form submission
 
+          const email = document.getElementById("signup-email").value;
+          const password = document.getElementById("signup-password").value;
+          const confirmPassword =
+            document.getElementById("confirm-password").value;
 
-// Password validation function
-function validatePassword(password) {
-  const errors = [];
+          // Validate email format
+          if (!validateEmail(email)) {
+            alert("Please enter a valid email address.");
+            return; // Stop form submission if email is invalid
+          }
 
-  if (password.length < 8) {
-    errors.push("Password must be at least 8 characters long.");
-  }
-  if (!/[A-Z]/.test(password)) {
-    errors.push("Password must contain at least one uppercase letter.");
-  }
-  if (!/[a-z]/.test(password)) {
-    errors.push("Password must contain at least one lowercase letter.");
-  }
-  if (!/[0-9]/.test(password)) {
-    errors.push("Password must contain at least one number.");
-  }
-  if (!/[!@#$%^&*(),.?\":{}|<>]/.test(password)) {
-    errors.push("Password must contain at least one special character.");
-  }
-  if (/\s/.test(password)) {
-    errors.push("Password must not contain spaces.");
-  }
+          // Validate password
+          const validationErrors = validatePassword(password);
+          if (validationErrors.length > 0) {
+            alert(
+              "Password validation failed:\n" + validationErrors.join("\n")
+            );
+            return; // Stop form submission if validation fails
+          }
 
-  return errors;
-}
+          if (password !== confirmPassword) {
+            alert("Passwords do not match.");
+            return; // Stop form submission if passwords don't match
+          }
 
-// Signup form submission
-document.getElementById("signup-form-element").addEventListener("submit", async function (event) {
-  event.preventDefault(); // Prevent default form submission
+          // Prepare form data
+          const formData = new FormData(this);
 
-  const email = document.getElementById("signup-email").value;
-  const password = document.getElementById("signup-password").value;
-  const confirmPassword = document.getElementById("confirm-password").value;
+          try {
+            // Send the signup data to the server
+            const response = await fetch("/signup", {
+              method: "POST",
+              body: formData,
+            });
 
-  // Validate email format
-  if (!validateEmail(email)) {
-    alert("Please enter a valid email address.");
-    return; // Stop form submission if email is invalid
-  }
-
-  // Validate password
-  const validationErrors = validatePassword(password);
-  if (validationErrors.length > 0) {
-    alert("Password validation failed:\n" + validationErrors.join("\n"));
-    return; // Stop form submission if validation fails
-  }
-
-  if (password !== confirmPassword) {
-    alert("Passwords do not match.");
-    return; // Stop form submission if passwords don't match
-  }
-
-  // Prepare form data
-  const formData = new FormData(this);
-
-  try {
-    // Send the signup data to the server
-    const response = await fetch("/signup", {
-      method: "POST",
-      body: formData,
-    });
-
-    if (response.ok) {
-      const result = await response.json(); // Parse JSON response
-      if (result.success) {
-        // Redirect to the URL provided by the server
-        window.location.href = result.redirect_url;
-      } else {
-        alert(result.message); // Display server-side error message
-      }
-    } else {
-      alert("Failed to communicate with the server. Please try again.");
-    }
-  } catch (error) {
-    console.error("Error during signup:", error);
-    alert("An error occurred during signup. Please try again later.");
-  }
-});
-
+            if (response.ok) {
+              const result = await response.json(); // Parse JSON response
+              if (result.success) {
+                // Redirect to the URL provided by the server
+                window.location.href = result.redirect_url;
+              } else {
+                alert(result.message); // Display server-side error message
+              }
+            } else {
+              alert("Failed to communicate with the server. Please try again.");
+            }
+          } catch (error) {
+            console.error("Error during signup:", error);
+            alert("An error occurred during signup. Please try again later.");
+          }
+        });
     </script>
   </body>
 </html>
